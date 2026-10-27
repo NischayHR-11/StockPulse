@@ -2,6 +2,7 @@ package com.stockpulse.service;
 
 import com.stockpulse.advisor.SuggestionDraft;
 import com.stockpulse.advisor.SuggestionStrategy;
+import com.stockpulse.advisor.SuggestionPolicyValidator;
 
 import com.stockpulse.exception.ConflictException;
 import com.stockpulse.entity.Product;
@@ -38,6 +39,8 @@ class SuggestionServiceTest {
     private SuggestionRepository suggestionRepository;
     @Mock
     private SuggestionStrategy suggestionStrategy;
+    @Mock
+    private SuggestionPolicyValidator policyValidator;
     @InjectMocks
     private SuggestionService suggestionService;
 
@@ -150,6 +153,24 @@ class SuggestionServiceTest {
         assertThat(response.status()).isEqualTo(SuggestionStatus.REJECTED);
         assertThat(product.getCurrentPrice()).isEqualByComparingTo("10.00");
         verify(productRepository, never()).findByIdForUpdate(product.getId());
+    }
+
+    @Test
+    void approvingStaleSuggestionDoesNotMutateProduct() {
+        UUID suggestionId = UUID.randomUUID();
+        Product product = product(UUID.randomUUID());
+        Suggestion suggestion = new Suggestion(product, SuggestionType.PRICE_ADJUSTMENT,
+                new BigDecimal("9.00"), new BigDecimal("11.00"), null,
+                com.stockpulse.entity.RecommendationDirection.INCREASE,
+                new BigDecimal("0.95"), "Stale.", SuggestionTrigger.LOW_INVENTORY);
+        when(suggestionRepository.findByIdForUpdate(suggestionId)).thenReturn(Optional.of(suggestion));
+        when(productRepository.findByIdForUpdate(product.getId())).thenReturn(Optional.of(product));
+
+        assertThatThrownBy(() -> suggestionService.resolve(suggestionId,
+                new ResolveSuggestionRequest(ResolveSuggestionRequest.Resolution.APPROVE)))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("stale");
+        assertThat(product.getCurrentPrice()).isEqualByComparingTo("10.00");
     }
 
     private static Product product(UUID id) {

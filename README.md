@@ -178,7 +178,7 @@ Open `http://localhost:5173`. The backend listens on `http://localhost:8080` by 
 | `ADVISOR_AI_TIMEOUT_MS` | `1500` | AI request timeout |
 | `VITE_API_BASE_URL` | `http://localhost:8080/api/v1` | Frontend API base URL |
 
-AI mode accepts either a JSON array or `{"suggestions":[...]}`. Invalid, missing, timed-out, non-success, or malformed AI responses fall back to deterministic rules.
+AI mode accepts either a JSON array or `{"suggestions":[...]}`. Invalid, missing, timed-out, non-success, malformed, or business-policy-inconsistent AI responses fall back to deterministic rules. Server-side validation also checks field exclusivity, product-price consistency, database-compatible monetary precision, and the authoritative rule result.
 
 ## 🔌 API overview
 
@@ -244,15 +244,15 @@ npm.cmd run build
 npm.cmd run lint
 ```
 
-The backend currently contains 11 test classes and 36 JUnit tests. In the authoring environment, Maven reached compilation but could not execute because `javac` was unavailable. Frontend build and lint have been executed successfully. No frontend test script is configured.
+The backend contains 12 test classes and 41 JUnit tests. In the authoring environment, Maven reached compilation but could not execute because `javac` was unavailable. Frontend build and lint have been executed successfully. No frontend test script is configured.
 
 ## ⚠️ Known limitations
 
 - Backend compilation and tests require a full JDK; a JRE alone is insufficient.
 - PostgreSQL and end-to-end smoke tests require Docker Desktop or a separately configured database.
 - The AI provider contract is intentionally generic; deterministic rules remain the reliable default.
-- Authentication, authorization, multi-product orders, payment, and fulfillment are outside the current scope.
-- The repository is not connected to Git in this workspace.
+- Authentication and authorization are not currently implemented; multi-product orders, payment, and fulfillment are also outside the current scope.
+- The public repository is available at [github.com/NischayHR-11/StockPulse](https://github.com/NischayHR-11/StockPulse).
 
 ## 🔭 Future work
 

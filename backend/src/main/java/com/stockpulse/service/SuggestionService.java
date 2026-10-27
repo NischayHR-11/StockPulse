@@ -1,6 +1,7 @@
 package com.stockpulse.service;
 
 import com.stockpulse.advisor.SuggestionStrategy;
+import com.stockpulse.advisor.SuggestionPolicyValidator;
 
 import com.stockpulse.exception.ConflictException;
 import com.stockpulse.exception.ResourceNotFoundException;
@@ -25,12 +26,15 @@ public class SuggestionService {
     private final ProductRepository productRepository;
     private final SuggestionRepository suggestionRepository;
     private final SuggestionStrategy suggestionStrategy;
+    private final SuggestionPolicyValidator policyValidator;
 
     public SuggestionService(ProductRepository productRepository, SuggestionRepository suggestionRepository,
-                             SuggestionStrategy suggestionStrategy) {
+                             SuggestionStrategy suggestionStrategy,
+                             SuggestionPolicyValidator policyValidator) {
         this.productRepository = productRepository;
         this.suggestionRepository = suggestionRepository;
         this.suggestionStrategy = suggestionStrategy;
+        this.policyValidator = policyValidator;
     }
 
     @Transactional
@@ -40,7 +44,10 @@ public class SuggestionService {
         Double averageDemandValue = productRepository.averageDemandVelocityByCategory(product.getCategory());
         java.math.BigDecimal averageDemand = averageDemandValue == null
                 ? java.math.BigDecimal.ZERO : java.math.BigDecimal.valueOf(averageDemandValue);
-        return suggestionStrategy.suggest(product, averageDemand, trigger).stream()
+        List<com.stockpulse.advisor.SuggestionDraft> drafts =
+                suggestionStrategy.suggest(product, averageDemand, trigger);
+        policyValidator.validate(product, averageDemand, trigger, drafts);
+        return drafts.stream()
                 .filter(draft -> suggestionRepository.findByProductIdAndTypeAndTriggerAndStatus(
                         productId, draft.type(), trigger, SuggestionStatus.PENDING).isEmpty())
                 .map(draft -> suggestionRepository.save(new Suggestion(product, draft.type(),
@@ -69,6 +76,12 @@ public class SuggestionService {
             Product product = productRepository.findByIdForUpdate(suggestion.getProduct().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Product not found: "
                             + suggestion.getProduct().getId()));
+            if (suggestion.getCurrentPrice() == null
+                    || product.getCurrentPrice().compareTo(suggestion.getCurrentPrice()) != 0
+                    || (suggestion.getStockLevelAtCreation() != null
+                    && product.getStockLevel() != suggestion.getStockLevelAtCreation())) {
+                throw new ConflictException("Suggestion is stale because product state has changed.");
+            }
             suggestion.approve();
             if (suggestion.getProposedPrice() != null) {
                 product.updatePrice(suggestion.getProposedPrice());

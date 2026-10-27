@@ -18,13 +18,16 @@ public class FallbackSuggestionAdvisor implements SuggestionAdvisor {
 
     private final RuleBasedSuggestionStrategy ruleBasedStrategy;
     private final AiAdvisorClient aiAdvisorClient;
+    private final SuggestionPolicyValidator policyValidator;
     private final String provider;
 
     public FallbackSuggestionAdvisor(RuleBasedSuggestionStrategy ruleBasedStrategy,
                                      AiAdvisorClient aiAdvisorClient,
+                                     SuggestionPolicyValidator policyValidator,
                                      @Value("${app.advisor.provider:rule}") String provider) {
         this.ruleBasedStrategy = ruleBasedStrategy;
         this.aiAdvisorClient = aiAdvisorClient;
+        this.policyValidator = policyValidator;
         this.provider = provider;
     }
 
@@ -35,7 +38,9 @@ public class FallbackSuggestionAdvisor implements SuggestionAdvisor {
             return ruleBasedStrategy.suggest(product, categoryAverageDemand, trigger);
         }
         try {
-            return aiAdvisorClient.suggest(product, categoryAverageDemand, trigger);
+            List<SuggestionDraft> drafts = aiAdvisorClient.suggest(product, categoryAverageDemand, trigger);
+            policyValidator.validate(product, categoryAverageDemand, trigger, drafts);
+            return drafts;
         } catch (AiAdvisorException exception) {
             log.warn("AI advisor unavailable; using deterministic fallback: {}", exception.getMessage());
             return ruleBasedStrategy.suggest(product, categoryAverageDemand, trigger);

@@ -35,6 +35,9 @@ public class Suggestion {
     @Column(name = "recommended_quantity")
     private Integer recommendedQuantity;
 
+    @Column(name = "stock_level_at_creation")
+    private Integer stockLevelAtCreation;
+
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     private RecommendationDirection direction;
@@ -75,6 +78,7 @@ public class Suggestion {
         this.currentPrice = currentPrice;
         this.proposedPrice = proposedPrice;
         this.recommendedQuantity = recommendedQuantity;
+        this.stockLevelAtCreation = product.getStockLevel();
         this.direction = direction;
         if (confidence == null || confidence.compareTo(BigDecimal.ZERO) < 0
                 || confidence.compareTo(BigDecimal.ONE) > 0) {
@@ -116,6 +120,7 @@ public class Suggestion {
     public BigDecimal getProposedPrice() { return proposedPrice; }
     public BigDecimal getCurrentPrice() { return currentPrice; }
     public Integer getRecommendedQuantity() { return recommendedQuantity; }
+    public Integer getStockLevelAtCreation() { return stockLevelAtCreation; }
     public RecommendationDirection getDirection() { return direction; }
     public BigDecimal getConfidence() { return confidence; }
     public String getRationale() { return rationale; }
