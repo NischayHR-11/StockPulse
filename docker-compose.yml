@@ -16,5 +16,49 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stockpulse-backend
+    restart: unless-stopped
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/stockpulse
+      DB_USERNAME: stockpulse
+      DB_PASSWORD: ${DB_PASSWORD:-stockpulse_dev}
+      SERVER_PORT: 8080
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:3000}
+      APP_SEED_ENABLED: ${APP_SEED_ENABLED:-false}
+      ADVISOR_PROVIDER: ${ADVISOR_PROVIDER:-rule}
+      ADVISOR_AI_ENDPOINT: ${ADVISOR_AI_ENDPOINT:-}
+      ADVISOR_AI_API_KEY: ${ADVISOR_AI_API_KEY:-}
+      ADVISOR_AI_TIMEOUT_MS: ${ADVISOR_AI_TIMEOUT_MS:-1500}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080/api/v1}
+    container_name: stockpulse-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
 volumes:
   stockpulse_pgdata:

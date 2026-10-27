@@ -115,17 +115,47 @@ frontend/src/
 - Node.js 20+ and npm
 - Docker Desktop, or a compatible PostgreSQL 16 instance
 
-### Start PostgreSQL
+### Run the full stack with Docker Compose
 
-From the repository root:
+The Compose setup builds the backend and frontend images, starts PostgreSQL first, waits for the backend health endpoint, and then starts the Nginx-served React application. From the repository root:
 
 ```powershell
 cd C:\Users\Zycus\Downloads\stockpulse-starter\stockpulse
 $env:DB_PASSWORD = "stockpulse_dev"
-docker compose up -d postgres
+docker compose up -d --build
 ```
 
+Open `http://localhost:3000`. The backend is available at `http://localhost:8080` and PostgreSQL is exposed on port `5432`. The backend uses the Compose service name `postgres` internally, so it can connect to the database without relying on host `localhost`. The frontend image bakes the browser API URL from `VITE_API_BASE_URL`; override it before `docker compose up` if the backend is exposed elsewhere.
+
+To follow application logs:
+
+```powershell
+docker compose logs -f backend frontend
+```
+
+To stop the services while retaining the PostgreSQL volume:
+
+```powershell
+docker compose down
+```
+
+To stop the services and remove the local PostgreSQL data volume:
+
+```powershell
+docker compose down -v
+```
+
+The last command deletes only the named local `stockpulse_pgdata` development volume. Do not use it if the volume contains data you need.
+
 The default development database is `stockpulse` on port `5432`, with username `stockpulse`. Set `DB_PASSWORD` before starting Docker if you want a different password.
+
+### Run PostgreSQL only
+
+If you prefer to run the backend and frontend directly from the host:
+
+```powershell
+docker compose up -d postgres
+```
 
 ### Configure and run the backend
 
