@@ -22,3 +22,4 @@ frontend/.env
 Thumbs.db
 *.tmp
 .cache/
+others/
