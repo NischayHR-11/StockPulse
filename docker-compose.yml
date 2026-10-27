@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: stockpulse-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: stockpulse
+      POSTGRES_USER: stockpulse
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-stockpulse_dev}
+    ports:
+      - "5432:5432"
+    volumes:
+      - stockpulse_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stockpulse -d stockpulse"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+volumes:
+  stockpulse_pgdata:
