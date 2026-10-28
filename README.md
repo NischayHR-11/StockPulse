@@ -203,12 +203,23 @@ Open `http://localhost:5173`. The backend listens on `http://localhost:8080` by 
 | `CORS_ALLOWED_ORIGIN` | `http://localhost:5173` | Allowed frontend origin |
 | `APP_SEED_ENABLED` | `false` | Opt-in demo seeding |
 | `ADVISOR_PROVIDER` | `rule` | `rule` or `ai` |
-| `ADVISOR_AI_ENDPOINT` | empty | AI HTTP endpoint when enabled |
-| `ADVISOR_AI_API_KEY` | empty | AI credential, supplied only through environment |
 | `ADVISOR_AI_TIMEOUT_MS` | `1500` | AI request timeout |
+| `GEMINI_API_KEY` | empty | Google Gemini API key, supplied only through the backend environment |
+| `GEMINI_MODEL` | `gemini-2.5-flash` | Gemini model used by the backend |
+| `GEMINI_BASE_URL` | `https://generativelanguage.googleapis.com/v1beta` | Gemini API base URL |
 | `VITE_API_BASE_URL` | `http://localhost:8080/api/v1` | Frontend API base URL |
 
-AI mode accepts either a JSON array or `{"suggestions":[...]}`. Invalid, missing, timed-out, non-success, malformed, or business-policy-inconsistent AI responses fall back to deterministic rules. Server-side validation also checks field exclusivity, product-price consistency, database-compatible monetary precision, and the authoritative rule result.
+To enable Gemini explicitly, set `ADVISOR_PROVIDER` to `ai` and provide `GEMINI_API_KEY` in the backend process environment. The backend calls Gemini's `generateContent` REST API with a structured prompt, JSON response MIME type, and response schema. The key is never sent to or configured in the React frontend. Invalid, missing, timed-out, non-success, malformed, or business-policy-inconsistent Gemini responses fall back to deterministic rules. Server-side validation also checks field exclusivity, product-price consistency, database-compatible monetary precision, and the authoritative rule result.
+
+Example backend configuration without a real credential:
+
+```powershell
+$env:ADVISOR_PROVIDER = "ai"
+$env:GEMINI_API_KEY = "<set-locally>"
+$env:GEMINI_MODEL = "gemini-2.5-flash"
+$env:ADVISOR_AI_TIMEOUT_MS = "5000"
+mvn spring-boot:run
+```
 
 ## 🔌 API overview
 

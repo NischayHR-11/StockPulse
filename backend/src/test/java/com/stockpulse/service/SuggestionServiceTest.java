@@ -13,6 +13,7 @@ import com.stockpulse.entity.Suggestion;
 import com.stockpulse.entity.SuggestionStatus;
 import com.stockpulse.entity.SuggestionType;
 import com.stockpulse.entity.SuggestionTrigger;
+import com.stockpulse.entity.SuggestionSource;
 import com.stockpulse.repository.SuggestionRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,8 +53,9 @@ class SuggestionServiceTest {
                 null, 8, null, new BigDecimal("0.95"), "Low stock.", SuggestionTrigger.LOW_INVENTORY);
         when(productRepository.findByIdForUpdate(productId)).thenReturn(Optional.of(product));
         when(productRepository.averageDemandVelocityByCategory(product.getCategory())).thenReturn(1.5);
-        when(suggestionStrategy.suggest(product, new BigDecimal("1.5"), SuggestionTrigger.LOW_INVENTORY))
-                .thenReturn(java.util.List.of(draft));
+        when(suggestionStrategy.generate(product, new BigDecimal("1.5"), SuggestionTrigger.LOW_INVENTORY))
+                .thenReturn(new com.stockpulse.advisor.SuggestionGeneration(
+                        java.util.List.of(draft), SuggestionSource.RULE_BASED));
         when(suggestionRepository.findByProductIdAndTypeAndTriggerAndStatus(
                 productId, SuggestionType.REORDER, SuggestionTrigger.LOW_INVENTORY, SuggestionStatus.PENDING))
                 .thenReturn(Optional.of(new Suggestion(product, SuggestionType.REORDER,
@@ -72,8 +74,9 @@ class SuggestionServiceTest {
                 null, 8, null, new BigDecimal("0.95"), "Low stock.", SuggestionTrigger.LOW_INVENTORY);
         when(productRepository.findByIdForUpdate(productId)).thenReturn(Optional.of(product));
         when(productRepository.averageDemandVelocityByCategory(product.getCategory())).thenReturn(1.5);
-        when(suggestionStrategy.suggest(product, new BigDecimal("1.5"), SuggestionTrigger.LOW_INVENTORY))
-                .thenReturn(java.util.List.of(draft));
+        when(suggestionStrategy.generate(product, new BigDecimal("1.5"), SuggestionTrigger.LOW_INVENTORY))
+                .thenReturn(new com.stockpulse.advisor.SuggestionGeneration(
+                        java.util.List.of(draft), SuggestionSource.GEMINI));
         when(suggestionRepository.findByProductIdAndTypeAndTriggerAndStatus(
                 productId, SuggestionType.REORDER, SuggestionTrigger.LOW_INVENTORY, SuggestionStatus.PENDING))
                 .thenReturn(Optional.empty());
@@ -85,6 +88,7 @@ class SuggestionServiceTest {
         assertThat(responses).hasSize(1);
         assertThat(responses.get(0).status()).isEqualTo(SuggestionStatus.PENDING);
         assertThat(responses.get(0).recommendedQuantity()).isEqualTo(8);
+        assertThat(responses.get(0).suggestionSource()).isEqualTo(SuggestionSource.GEMINI);
     }
 
     @Test

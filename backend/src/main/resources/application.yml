@@ -39,6 +39,8 @@ app:
   advisor:
     provider: ${ADVISOR_PROVIDER:rule}
     ai:
-      endpoint: ${ADVISOR_AI_ENDPOINT:}
-      api-key: ${ADVISOR_AI_API_KEY:}
       timeout-ms: ${ADVISOR_AI_TIMEOUT_MS:1500}
+gemini:
+  api-key: ${GEMINI_API_KEY:}
+  model: ${GEMINI_MODEL:gemini-2.5-flash}
+  base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com/v1beta}

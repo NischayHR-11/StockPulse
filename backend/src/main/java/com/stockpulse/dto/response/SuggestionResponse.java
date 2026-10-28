@@ -4,6 +4,7 @@ import com.stockpulse.entity.SuggestionStatus;
 import com.stockpulse.entity.SuggestionType;
 import com.stockpulse.entity.RecommendationDirection;
 import com.stockpulse.entity.SuggestionTrigger;
+import com.stockpulse.entity.SuggestionSource;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -21,6 +22,7 @@ public record SuggestionResponse(
         BigDecimal confidence,
         String rationale,
         SuggestionTrigger trigger,
+        SuggestionSource suggestionSource,
         Instant createdAt,
         Instant resolvedAt
 ) { }

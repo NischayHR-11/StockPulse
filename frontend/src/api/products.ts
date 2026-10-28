@@ -58,7 +58,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export function createProduct(input: Omit<Product, 'id' | 'status' | 'createdAt' | 'updatedAt'>) {
+export function createProduct(input: Omit<Product, 'id' | 'status' | 'createdAt' | 'updatedAt' | 'unitsSoldLast24Hours'>) {
   return request<Product>('/products', { method: 'POST', body: JSON.stringify(input) });
 }
 

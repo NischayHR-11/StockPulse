@@ -15,6 +15,7 @@ public record ProductResponse(
         int stockLevel,
         int reorderThreshold,
         int demandVelocity,
+        long unitsSoldLast24Hours,
         ProductStatus status,
         Instant createdAt,
         Instant updatedAt

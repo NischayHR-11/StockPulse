@@ -58,12 +58,24 @@ public class Suggestion {
     @Column(name = "resolved_at")
     private Instant resolvedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "suggestion_source", length = 20)
+    private SuggestionSource source;
+
     protected Suggestion() { }
 
     public Suggestion(Product product, SuggestionType type, BigDecimal currentPrice,
                       BigDecimal proposedPrice, Integer recommendedQuantity,
                       RecommendationDirection direction, BigDecimal confidence,
                       String rationale, SuggestionTrigger trigger) {
+        this(product, type, currentPrice, proposedPrice, recommendedQuantity, direction,
+                confidence, rationale, trigger, null);
+    }
+
+    public Suggestion(Product product, SuggestionType type, BigDecimal currentPrice,
+                      BigDecimal proposedPrice, Integer recommendedQuantity,
+                      RecommendationDirection direction, BigDecimal confidence,
+                      String rationale, SuggestionTrigger trigger, SuggestionSource source) {
         if (product == null || type == null || trigger == null
                 || rationale == null || rationale.isBlank() || rationale.length() > 500) {
             throw new IllegalArgumentException("Suggestion product, type, trigger, and rationale are required.");
@@ -87,6 +99,7 @@ public class Suggestion {
         this.confidence = confidence;
         this.rationale = rationale;
         this.trigger = trigger;
+        this.source = source;
         this.status = SuggestionStatus.PENDING;
     }
 
@@ -127,4 +140,5 @@ public class Suggestion {
     public SuggestionTrigger getTrigger() { return trigger; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getResolvedAt() { return resolvedAt; }
+    public SuggestionSource getSource() { return source; }
 }

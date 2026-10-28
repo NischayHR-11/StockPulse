@@ -10,6 +10,7 @@ export interface Product {
   stockLevel: number;
   reorderThreshold: number;
   demandVelocity: number;
+  unitsSoldLast24Hours: number;
   status: ProductStatus;
   createdAt: string;
   updatedAt: string;
@@ -19,6 +20,7 @@ export type SuggestionType = 'PRICE_ADJUSTMENT' | 'REORDER';
 export type SuggestionStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED';
 export type SuggestionDirection = 'INCREASE' | 'HOLD' | null;
 export type SuggestionTrigger = 'INITIAL' | 'LOW_INVENTORY' | 'DEMAND_SPIKE' | 'MANUAL';
+export type SuggestionSource = 'GEMINI' | 'RULE_BASED';
 
 export interface Suggestion {
   id: string;
@@ -32,6 +34,7 @@ export interface Suggestion {
   confidence: number;
   rationale: string;
   trigger: SuggestionTrigger;
+  suggestionSource: SuggestionSource | null;
   createdAt: string;
   resolvedAt: string | null;
 }

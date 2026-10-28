@@ -31,8 +31,9 @@ services:
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:3000}
       APP_SEED_ENABLED: ${APP_SEED_ENABLED:-false}
       ADVISOR_PROVIDER: ${ADVISOR_PROVIDER:-rule}
-      ADVISOR_AI_ENDPOINT: ${ADVISOR_AI_ENDPOINT:-}
-      ADVISOR_AI_API_KEY: ${ADVISOR_AI_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      GEMINI_BASE_URL: ${GEMINI_BASE_URL:-https://generativelanguage.googleapis.com/v1beta}
       ADVISOR_AI_TIMEOUT_MS: ${ADVISOR_AI_TIMEOUT_MS:-1500}
     ports:
       - "8080:8080"

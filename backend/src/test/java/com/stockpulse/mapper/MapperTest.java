@@ -20,6 +20,7 @@ class MapperTest {
         assertThat(response.sku()).isEqualTo("SKU-1");
         assertThat(response.currentPrice()).isEqualByComparingTo("12.34");
         assertThat(response.stockLevel()).isEqualTo(4);
+        assertThat(response.unitsSoldLast24Hours()).isZero();
         assertThat(response.status()).isEqualTo(ProductStatus.ACTIVE);
         assertThat(response.category()).isEqualTo(ProductCategory.HOME);
     }

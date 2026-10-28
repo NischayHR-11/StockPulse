@@ -44,15 +44,17 @@ public class SuggestionService {
         Double averageDemandValue = productRepository.averageDemandVelocityByCategory(product.getCategory());
         java.math.BigDecimal averageDemand = averageDemandValue == null
                 ? java.math.BigDecimal.ZERO : java.math.BigDecimal.valueOf(averageDemandValue);
-        List<com.stockpulse.advisor.SuggestionDraft> drafts =
-                suggestionStrategy.suggest(product, averageDemand, trigger);
+        com.stockpulse.advisor.SuggestionGeneration generation =
+                suggestionStrategy.generate(product, averageDemand, trigger);
+        List<com.stockpulse.advisor.SuggestionDraft> drafts = generation.drafts();
         policyValidator.validate(product, averageDemand, trigger, drafts);
         return drafts.stream()
                 .filter(draft -> suggestionRepository.findByProductIdAndTypeAndTriggerAndStatus(
                         productId, draft.type(), trigger, SuggestionStatus.PENDING).isEmpty())
                 .map(draft -> suggestionRepository.save(new Suggestion(product, draft.type(),
                         draft.currentPrice(), draft.proposedPrice(), draft.recommendedQuantity(),
-                        draft.direction(), draft.confidence(), draft.rationale(), draft.trigger())))
+                        draft.direction(), draft.confidence(), draft.rationale(), draft.trigger(),
+                        generation.source())))
                 .map(SuggestionMapper::toResponse)
                 .toList();
     }

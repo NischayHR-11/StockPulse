@@ -3,6 +3,7 @@ package com.stockpulse.advisor;
 import com.stockpulse.entity.Product;
 import com.stockpulse.entity.ProductCategory;
 import com.stockpulse.entity.SuggestionTrigger;
+import com.stockpulse.entity.SuggestionSource;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -34,6 +35,8 @@ class FallbackSuggestionAdvisorTest {
 
         assertThat(advisor.suggest(product, BigDecimal.ONE, SuggestionTrigger.LOW_INVENTORY))
                 .containsExactly(ruleDraft);
+        assertThat(advisor.generate(product, BigDecimal.ONE, SuggestionTrigger.LOW_INVENTORY).source())
+                .isEqualTo(SuggestionSource.RULE_BASED);
     }
 
     @Test
@@ -49,6 +52,8 @@ class FallbackSuggestionAdvisorTest {
 
         assertThat(advisor.suggest(product, BigDecimal.ONE, SuggestionTrigger.MANUAL)).isEmpty();
         Mockito.verifyNoInteractions(ai);
+        assertThat(advisor.generate(product, BigDecimal.ONE, SuggestionTrigger.MANUAL).source())
+                .isEqualTo(SuggestionSource.RULE_BASED);
     }
 
     @Test
@@ -97,5 +102,28 @@ class FallbackSuggestionAdvisorTest {
         assertThat(advisor.suggest(product, BigDecimal.ONE, SuggestionTrigger.LOW_INVENTORY))
                 .containsExactly(ruleDraft);
         Mockito.verify(rules).suggest(product, BigDecimal.ONE, SuggestionTrigger.LOW_INVENTORY);
+    }
+
+    @Test
+    void marksPolicyValidatedAiAdviceAsGemini() {
+        RuleBasedSuggestionStrategy rules = Mockito.mock(RuleBasedSuggestionStrategy.class);
+        AiAdvisorClient ai = Mockito.mock(AiAdvisorClient.class);
+        SuggestionPolicyValidator validator = Mockito.mock(SuggestionPolicyValidator.class);
+        Product product = new Product("SKU-1", "Test", ProductCategory.HOME,
+                new BigDecimal("10.00"), 2, 5, 1);
+        SuggestionDraft aiDraft = new SuggestionDraft(
+                com.stockpulse.entity.SuggestionType.REORDER,
+                new BigDecimal("10.00"), null, 13, null,
+                new BigDecimal("0.95"), "AI recommendation.", SuggestionTrigger.MANUAL);
+        when(ai.suggest(product, BigDecimal.ONE, SuggestionTrigger.MANUAL))
+                .thenReturn(List.of(aiDraft));
+
+        FallbackSuggestionAdvisor advisor = new FallbackSuggestionAdvisor(rules, ai, validator, "ai");
+
+        assertThat(advisor.generate(product, BigDecimal.ONE, SuggestionTrigger.MANUAL).source())
+                .isEqualTo(SuggestionSource.GEMINI);
+        Mockito.verify(validator).validate(product, BigDecimal.ONE, SuggestionTrigger.MANUAL,
+                List.of(aiDraft));
+        Mockito.verifyNoInteractions(rules);
     }
 }

@@ -11,6 +11,7 @@ public final class SuggestionMapper {
                 suggestion.getType(), suggestion.getStatus(), suggestion.getCurrentPrice(),
                 suggestion.getProposedPrice(), suggestion.getRecommendedQuantity(),
                 suggestion.getDirection(), suggestion.getConfidence(), suggestion.getRationale(),
-                suggestion.getTrigger(), suggestion.getCreatedAt(), suggestion.getResolvedAt());
+                suggestion.getTrigger(), suggestion.getSource(), suggestion.getCreatedAt(),
+                suggestion.getResolvedAt());
     }
 }

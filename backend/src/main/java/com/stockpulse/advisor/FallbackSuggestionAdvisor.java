@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.List;
+import com.stockpulse.entity.SuggestionSource;
 
 @Primary
 @Component
@@ -34,19 +35,31 @@ public class FallbackSuggestionAdvisor implements SuggestionAdvisor {
     @Override
     public List<SuggestionDraft> suggest(Product product, BigDecimal categoryAverageDemand,
                                          SuggestionTrigger trigger) {
+        return generate(product, categoryAverageDemand, trigger).drafts();
+    }
+
+    @Override
+    public SuggestionGeneration generate(Product product, BigDecimal categoryAverageDemand,
+                                         SuggestionTrigger trigger) {
         if (!"ai".equalsIgnoreCase(provider)) {
-            return ruleBasedStrategy.suggest(product, categoryAverageDemand, trigger);
+            log.info("Using deterministic rule-based advisor because provider is configured as '{}'.", provider);
+            return new SuggestionGeneration(ruleBasedStrategy.suggest(product, categoryAverageDemand, trigger),
+                    SuggestionSource.RULE_BASED);
         }
         try {
             List<SuggestionDraft> drafts = aiAdvisorClient.suggest(product, categoryAverageDemand, trigger);
             policyValidator.validate(product, categoryAverageDemand, trigger, drafts);
-            return drafts;
+            log.info("Gemini advisor returned policy-valid recommendations.");
+            return new SuggestionGeneration(drafts, SuggestionSource.GEMINI);
         } catch (AiAdvisorException exception) {
-            log.warn("AI advisor unavailable; using deterministic fallback: {}", exception.getMessage());
-            return ruleBasedStrategy.suggest(product, categoryAverageDemand, trigger);
+            log.warn("AI advisor unavailable; using deterministic fallback. category={}, status={}, detail={}",
+                    exception.getCategory(), exception.getHttpStatus(), exception.getDetail());
+            return new SuggestionGeneration(ruleBasedStrategy.suggest(product, categoryAverageDemand, trigger),
+                    SuggestionSource.RULE_BASED);
         } catch (RuntimeException exception) {
             log.error("Unexpected AI advisor failure; using deterministic fallback.", exception);
-            return ruleBasedStrategy.suggest(product, categoryAverageDemand, trigger);
+            return new SuggestionGeneration(ruleBasedStrategy.suggest(product, categoryAverageDemand, trigger),
+                    SuggestionSource.RULE_BASED);
         }
     }
 }
